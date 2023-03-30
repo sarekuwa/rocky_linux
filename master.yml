@@ -8,16 +8,6 @@
       debug:
         msg: "The hostname is {{ ansible_hostname }} and the OS is {{ ansible_os_family }}"
 
-- name: "Setup postgres nodes"
-  hosts: db
-  gather_facts: yes
-  vars_files:
-  - ./group_vars/credentials
-  tasks:
-    - name: "Run the pg role"
-      import_role:
-        name: pg
-
 - name: "Setup Rocky9 virtual machines."
   hosts: rocky
   tasks:
@@ -28,6 +18,26 @@
     - name: "Run Rocky role"
       import_role:
         name: rocky_start
+
+- name: "Setup postgres nodes"
+  hosts: db
+  gather_facts: yes
+  vars_files:
+  - ./group_vars/credentials
+  tasks:
+    - name: "Run the pg role"
+      import_role:
+        name: pg
+
+- name: "Setup Metis dev enviroment."  
+  hosts: metis
+  gather_facts: yes
+  vars_files:
+  - ./group_vars/credentials
+  tasks:
+    - name: "Run metis role"
+      import_role:
+        name: metis        
 
 - name: "Setup Python"  
   hosts: python
@@ -53,31 +63,20 @@
       import_role:
         name: docker
 
+- name: "Setup FrontEnd  Tier | Nginx"  
+  hosts: nginx
+  gather_facts: yes
+  tasks:
+    - name: "Run nginx role"
+      import_role:
+        name: nginx
+
 - name: "Setup Kubernetes master."  
   hosts: k8s
   gather_facts: no
   tasks:
     - name: "Run k8s role"
       import_role:
-        name: k8s                  
-
-- name: "Setup Metis dev enviroment."  
-  hosts: metis
-  gather_facts: yes
-  vars_files:
-  - ./group_vars/credentials
-  tasks:
-    - name: "Run metis role"
-      import_role:
-        name: metis                  
-
-- name: "Setup FrontEnd  Tier | Nginx"  
-  hosts: nginx
-  gather_facts: no
-  tasks:
-    - name: "Run nginx role"
-      import_role:
-        name: nginx
-
+        name: k8s                            
 
 

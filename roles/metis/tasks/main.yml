@@ -1,6 +1,6 @@
 ---
 # tasks file for metis
-- name: "Metis | Create database user."
+- name: "PostgreSQL | Create database user."
   postgresql_user:
     db: postgres
     name: "{{ metis_database_user }}"
@@ -11,10 +11,20 @@
   become_user: "{{ pguser }}"
   tags: metis
 
-- name: "Metis | Create metis database"
+- name: "PostgreSQL | Create metis database"
   postgresql_db:
     name: "{{ metis_dbname }}"
     owner: "{{ metis_database_user }}"
+  become: true
+  become_user: "{{ pguser }}"
+  tags: metis
+
+- name: "PostgreSQL | Grant ALL privileges on database"
+  postgresql_privs:
+    db: "{{ metis_dbname }}"
+    privs: ALL
+    type: database
+    role: "{{ metis_database_user }}"
   become: true
   become_user: "{{ pguser }}"
   tags: metis
@@ -48,3 +58,44 @@
   become: true
   when: (install_dotnet|bool)
   tags: metis
+
+- name: "Metis | Get nodejs install script."
+  get_url:
+    url: "{{ nodejs_url }}"
+    dest: /tmp
+    mode: '0744'
+  when: (install_nodejs|bool)
+  tags: metis
+
+- name: "Metis | Install nodejs 18."
+  command:
+    cmd: "/tmp/setup_18.x"
+  register: output_nodejs
+  when: (install_nodejs|bool)
+  tags: metis
+
+- name: "Metis | Logging nodejs install actions."
+  debug:
+    var: output_nodejs
+  when: (install_nodejs|bool)
+  tags: metis
+
+- name: "Metis | Install yarn repo package"
+  get_url:
+    url: "{{ yarn_repo }}"
+    dest: /etc/yum.repos.d
+    mode: '0644'
+  when: (install_nodejs|bool)    
+  tags: metis
+
+- name: "Metis | Ensure a list of packages installed"
+  dnf:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - nodejs
+    - yarn
+    state: present
+  when: (install_nodejs|bool)    
+  tags: metis
+

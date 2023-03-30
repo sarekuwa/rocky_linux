@@ -1,6 +1,9 @@
 ---
 # defaults file for metis
-metis_database_user: metis_user
-metis_dbname: metis_db
+metis_database_user: metis
+metis_dbname: metis
 dotnet_url: https://dot.net/v1/dotnet-install.sh
+nodejs_url: https://rpm.nodesource.com/setup_18.x
+yarn_repo: https://dl.yarnpkg.com/rpm/yarn.repo
 install_dotnet: false
+install_nodejs: false

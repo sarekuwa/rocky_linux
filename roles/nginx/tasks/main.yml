@@ -56,15 +56,15 @@
     mode: 0644
   tags: nginx
 
-- name: "Add server Vhost templates"
+- name: "Add server Vhost templates" 
   template:
-    src: zabbix.conf.j2
-    dest: "{{ confd }}/zabbix.conf"
+    src: conf.j2
+    dest: "{{ confd }}/{{ item.name }}.http.conf"
     owner: root
     group: root
     mode: 0644
   with_items:
-  - { name: "zabbix", server1: "{{ groups['balancer'][0] }}", port: "{{ zabbix_port }}" }
+  - { name: "metis.local", server1: "{{ groups['nginx'][0] }}", port: "9090" }
   tags: nginx
 
 - name: "Enable and start nginx"
