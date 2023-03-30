@@ -1,0 +1,6 @@
+---
+# defaults file for metis
+metis_database_user: metis_user
+metis_dbname: metis_db
+dotnet_url: https://dot.net/v1/dotnet-install.sh
+install_dotnet: false

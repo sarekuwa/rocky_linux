@@ -1,0 +1,50 @@
+---
+# tasks file for metis
+- name: "Metis | Create database user."
+  postgresql_user:
+    db: postgres
+    name: "{{ metis_database_user }}"
+    password: "{{ metis_database_pass }}"
+    encrypted: yes
+  no_log: true
+  become: true
+  become_user: "{{ pguser }}"
+  tags: metis
+
+- name: "Metis | Create metis database"
+  postgresql_db:
+    name: "{{ metis_dbname }}"
+    owner: "{{ metis_database_user }}"
+  become: true
+  become_user: "{{ pguser }}"
+  tags: metis
+
+- name: "Metis | Get dotnet install script."
+  get_url:
+    url: "{{ dotnet_url }}"
+    dest: /tmp
+    mode: '0744'
+  when: (install_dotnet|bool)
+  tags: metis
+
+- name: "Metis | Install dotnet 6."
+  command:
+    cmd: "/tmp/dotnet-install.sh -c 6.0"
+  register: output_dotnet
+  when: (install_dotnet|bool)
+  tags: metis
+
+- name: "Metis | Logging dotnet install actions."
+  debug:
+    var: output_dotnet
+  when: (install_dotnet|bool)
+  tags: metis
+
+- name: "Metis | Add dotnet variable to bashrc."
+  lineinfile:
+    path: "~/.bashrc"
+    regexp: "^ "
+    line: "export PATH=$PATH:~/.dotnet/"
+  become: true
+  when: (install_dotnet|bool)
+  tags: metis

@@ -1,0 +1,4 @@
+env: dev
+hostmetadata: '"Linux" "Test playbooks"'
+master_ip: localhost
+postgresql: localhost

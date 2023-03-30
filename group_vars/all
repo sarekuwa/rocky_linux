@@ -1,0 +1,6 @@
+#Zabbix, pg
+pguser: postgres
+corpdomain: area.local
+confd: /etc/nginx/conf.d
+pg_name: postgres
+pg_port: 5432

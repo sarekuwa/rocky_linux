@@ -1,0 +1,16 @@
+---
+# handlers file
+#
+
+- name: Restart docker
+  systemd:
+    name:  "{{ item }}"
+    state: restarted
+  loop:
+    - docker
+    - docker.socket
+
+- name: Restart kubelet
+  systemd:
+    name:  kubelet
+    state: restarted

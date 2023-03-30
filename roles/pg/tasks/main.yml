@@ -1,0 +1,131 @@
+---
+#PostgreSQL 15 Setup role
+
+- name: "Import a GPG key from a url"
+  rpm_key:
+    state: present
+    key: "https://apt.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-96"
+  tags: pg
+
+- name: "PostgreSQL | Install pg repo package"
+  yum:
+    name: "{{ repo_postgres }}"
+    state: present
+    validate_certs: no
+  tags: pg
+
+- name: "PostgreSQL | Ensure a list of pg packages installed"
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - postgresql15-server
+    - postgresql15
+    - python3-psycopg2
+    state: present
+  tags: pg
+
+- name: "PostgreSQL | Make sure the pgdata directory exists"
+  file:
+    path: "{{ pgdata }}"
+    owner: "{{ pguser }}"
+    group: "{{ pggroup }}"
+    state: directory
+    mode: 0700
+  register: pgdata_dir_exist
+  when: pgdata != ""
+  tags: pg
+
+- name: "PostgreSQL | Check whether the postgres data directory is initialized | RedHat"
+  stat:
+    path: "{{ pgdata }}"
+  register: pgdata_dir_initialized
+  tags: pg
+
+- name: "PostgreSQL | Initialize the database "
+  shell: "{{ pgbin }} initdb"
+  poll: 15
+  async: 1
+  register: result
+  ignore_errors: true
+  tags: pg
+
+- debug:
+    msg: result.stdout
+
+
+- name: "PostgreSQL | Copy pg_hba.conf to the targets"
+  template:
+    src: pg_hba.conf.j2
+    dest: "{{ pgdata }}/pg_hba.conf"
+    owner: "{{ pguser }}"
+    group: "{{ pggroup }}"
+  become: true
+  become_user: "{{ pguser }}"
+  notify: reload postgres
+  tags: pg
+
+- name: "PostgreSQL | Change postgresql.conf"
+  lineinfile:
+    path: "{{ pgdata }}/postgresql.conf"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+  - { regexp: '^#listen_addresses', line: "listen_addresses = '{{ ansible_default_ipv4.address }}'"}
+  - { regexp: '^max_connections', line: "max_connections = 1000"}
+  tags: pg
+
+- name: "PostgreSQL | Change PGDATA in service postgresql-15"
+  lineinfile:
+    dest: "/usr/lib/systemd/system/postgresql-15.service"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backrefs: yes
+    state: present
+  with_items:
+   - { regexp: '^Environment=PGDATA=', line: 'Environment=PGDATA={{ pgdata }}' }
+  tags: pg
+
+- name: "PostgreSQL | Add nofile soft limit for the user postgres"
+  pam_limits:
+    domain: "{{ pguser }}"
+    limit_type: soft
+    limit_item: nofile
+    value: 4096
+  tags: pg
+
+- name: "PostgreSQL | Add nofile hard limit for the user postgres"
+  pam_limits:
+    domain: "{{ pguser }}"
+    limit_type: hard
+    limit_item: nofile
+    value: 16384
+  tags: pg
+
+- name: "PostgreSQL | Add postgres user to sudoers"
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    line: '{{ pguser }} ALL=(ALL) NOPASSWD: ALL'
+    validate: '/usr/sbin/visudo -cf %s'
+  tags: pg
+
+- name: "PostgreSQL | Enable and start PG service"
+  systemd:
+    name: postgresql-15
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  tags: pg
+
+- name: "PostgreSQL | Change postgres user password"
+  postgresql_user:
+    db: postgres
+    name: "{{ pguser }}"
+    login_password: "{{ pgpass }}"
+    encrypted: yes
+  no_log: false
+  become: true
+  become_user: "{{ pguser }}"
+  tags: pg

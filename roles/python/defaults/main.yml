@@ -1,0 +1,7 @@
+---
+# defaults file for python
+#
+python_version: 3.9.9
+python_download_url: "https://www.python.org/ftp/python/{{ python_version }}/Python-{{ python_version }}.tgz"
+python_home: "/opt/python"
+install_python: (true|bool)

@@ -1,0 +1,131 @@
+---
+# tasks file for python
+#Python section
+
+- name: "Check python variable"
+  debug:
+    var: install_python
+  tags: python
+
+- name: "Python | Download latest python version"
+  get_url:
+    url: "{{ python_download_url }}"
+    dest: "/tmp/Python-{{ python_version }}.tgz"
+    owner: "root"
+    group: "root"
+  when: install_python
+  tags: python
+
+- name: "Python | Create python install directory."
+  file:
+    path:  "{{ python_home }}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0755
+  when: install_python
+  tags: python
+
+- name: "Python | Extract python archive"
+  unarchive:
+    src: "/tmp/Python-{{ python_version }}.tgz"
+    dest:  "{{ python_home }}"
+    owner: "root"
+    group: "root"
+    extra_opts: [--strip-components=1]
+    remote_src: yes
+  become: true
+  become_user: "root"
+  when: install_python
+  tags: python
+
+- name: "Python | Check installation directory."
+  shell:
+    cmd: ls -lah
+    chdir: "{{ python_home }}"
+  register: output
+  when: install_python
+  tags: python
+
+- debug:
+    var: output
+  when: install_python
+  tags: python
+
+- name: "Python | Run configure script."
+  shell:
+    cmd: ./configure --enable-optimizations
+    chdir: "{{ python_home }}"
+  register: output_configure
+  when: install_python
+  tags: python
+
+- debug:
+    var: output_configure
+  tags: python
+
+- name: "Python | Run installation script."
+  shell:
+    cmd: make altinstall
+    chdir: "{{ python_home }}"
+  register: output_install
+  when: install_python
+  tags: python
+
+- debug:
+    var: output_install
+  when: install_python
+  tags: python
+
+- name: "Python | Install Django 4"
+  pip:
+    name: "{{ item }}"
+    executable: pip3.9
+    state: present
+  with_items:
+   - psycopg2-binary
+   - django
+  when: install_python
+  tags: python
+
+- name: "Python | Create Python3.9 environment folder"
+  file:
+    name: "{{ django_path }}"
+    state: directory
+  when: install_python
+  tags: python
+
+- name: "Python | Create requirements.txt file for pip"
+  file:
+    path: "{{ django_path }}/requirements.txt"
+    state: touch
+  when: install_python
+  tags: python
+
+- name: "Python | Add a line to .vimrc file if the file does not exist, without passing regexp"
+  lineinfile:
+    path: "{{ django_path }}/requirements.txt"
+    line: |
+      psycopg2-binary
+      django
+      wheel
+      pytz     
+    create: yes
+  when: install_python
+  tags: python
+  
+- name: "Python | Delete python install directory."
+  file:
+    path:  "{{ item }}"
+    state: absent
+  loop:
+    - "{{ python_home }}"
+    - "/tmp/Python-{{ python_version }}.tgz"
+  when: install_python
+  tags: python
+
+- name: "Python | Install complete.."
+  set_fact:
+    install_python: (false|bool)
+    cacheable: yes
+  tags: python
