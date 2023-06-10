@@ -29,16 +29,6 @@
       import_role:
         name: pg
 
-- name: "Setup Metis dev enviroment."  
-  hosts: metis
-  gather_facts: yes
-  vars_files:
-  - ./group_vars/credentials
-  tasks:
-    - name: "Run metis role"
-      import_role:
-        name: metis        
-
 - name: "Setup Python"  
   hosts: python
   gather_facts: no
@@ -79,4 +69,11 @@
       import_role:
         name: k8s                            
 
-
+- name: "Setup Gitlab CE."  
+  hosts: gitlab
+  gather_facts: no
+  tasks:
+    - name: "Run gitlab role"
+      import_role:
+        name: gitlab
+        
