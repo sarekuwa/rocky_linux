@@ -1,0 +1,8 @@
+auth_modules:
+  pgconnect: # Set this to any name you want
+    type: userpass
+    userpass:
+      username: postgres
+      password: xEiyU9@msz!2Su7X
+    options:
+      sslmode: disable
