@@ -1,0 +1,55 @@
+---
+# tasks file for gitlab
+- name: "Gitlab | Install packages."
+  yum:  
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - curl
+    - policycoreutils-python
+    - openssh-server
+    - perl 
+    - postfix
+    state: latest
+  tags: gitlab
+
+- name: "Gitlab | Start and enable sshd and postfix daemon via systemd."
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  loop:
+    - sshd
+    - postfix
+  tags: gitlab
+
+- name: " Gitlab | Download gitlab rpm script"
+  get_url:
+    url: "{{ gitlab_script_url }}"
+    dest: /tmp/gitlab.sh
+    mode: '0755'
+  tags: gitlab
+
+- name: "Gitlab | Add Gitlab repository."
+  command:
+    cmd: /tmp/gitlab.sh
+  register: output
+  tags: gitlab
+
+- name: "Gitlab | Logging initializing actions."
+  debug:
+    var: output
+  tags: gitlab
+
+- name: "Gitlab | Install Gitlab package."
+  yum:
+    name: "gitlab-ee"
+    state: latest
+  register: install_actions
+  tags: gitlab
+
+- name: "Gitlab | Logging initializing actions."
+  debug:
+    var: install_actions
+  tags: gitlab

@@ -1,0 +1,59 @@
+---
+# tasks file for rocky_start
+
+- name: "Rocky9 | Disable SELinux"
+  selinux:
+    state: disabled
+  tags: rocky
+
+- name: "Rocky9 | Ensure SELinux is set to disabled mode"
+  lineinfile:
+    path: "/etc/selinux/config"
+    regexp: '^SELINUX='
+    line: "SELINUX=disabled"
+  tags: rocky
+
+- name: "Rocky9 | Stop and disable firewalld."
+  systemd: 
+    name: firewalld
+    state: stopped
+    enabled: no
+  ignore_errors: true
+  tags: rocky
+
+- name: "Rocky9 | Install packages."
+  dnf:  
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - epel-release
+    - htop
+    - mc
+    - vim 
+    - zip
+    - pwgen
+    - python3
+    - openssl-devel
+    - libffi-devel
+    - bzip2-devel
+    - wget
+    - curl
+    - tmux
+    - net-tools
+    - python3-pip
+    - yum-utils
+    state: latest
+  tags: rocky
+
+- name: "rocky | Install the 'Development tools' package group."
+  dnf:
+    name: "@Development tools"
+    state: present
+  tags: rocky
+
+- name: "rocky | Copy .vimrc file to root directory."
+  copy:
+    src: .vimrc
+    dest: "/root"
+    mode: 0600
+  tags: rocky

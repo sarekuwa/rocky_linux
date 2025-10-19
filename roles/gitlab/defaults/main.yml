@@ -1,0 +1,4 @@
+---
+# defaults file for gitlab
+gitlab_script_url : https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh
+gitlab_domain : http://gitlab.area.local

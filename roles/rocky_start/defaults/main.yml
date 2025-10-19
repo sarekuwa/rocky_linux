@@ -1,0 +1,4 @@
+---
+# defaults file for rocky_start
+django_path: "/opt/djangoprod"
+
